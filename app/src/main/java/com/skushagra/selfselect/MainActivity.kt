@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    ChatScreen()
+                    MainScreen() // Call the new MainScreen composable
                 }
             }
         }
