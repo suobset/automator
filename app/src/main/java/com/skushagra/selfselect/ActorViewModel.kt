@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 
 // A simple class to process the YAML input and perform actions
 class ActorViewModel {
@@ -20,7 +22,8 @@ class ActorViewModel {
                     if (service != null) {
                         service.pullDownNotificationBar()
                     } else {
-                        println("Accessibility service not active or not granted.")
+                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                        context.startActivity(intent)
                     }
                 }
                 else -> {
