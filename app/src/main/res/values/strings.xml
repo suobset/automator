@@ -3,6 +3,7 @@
     <string name="action_go">Go</string>
     <string name="baking_title">Baking with Gemini</string>
     <string name="label_prompt">Prompt</string>
+    <string name="accessibility_service_description">Automator Accessibility Service</string>
     <string name="prompt_placeholder">Provide a recipe for the baked goods in the image</string>
     <string name="image1_description">Cupcake</string>
     <string name="image2_description">Cookies</string>
