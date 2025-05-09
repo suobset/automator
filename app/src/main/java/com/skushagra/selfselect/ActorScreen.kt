@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -14,7 +15,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ActorScreen() {
     var yamlInput by rememberSaveable { mutableStateOf("") } // State to hold the YAML input
-
+    val context = LocalContext.current
+    val actorExecutor = remember { ActorExecutor() }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,10 +47,7 @@ fun ActorScreen() {
         // Button below the Text Box
         Button(
             onClick = {
-                // TODO: Implement the action to perform with the YAML input
-                println("Start Action button clicked with YAML:\n$yamlInput") // Placeholder action
-                // You would typically parse the yamlInput string here
-                // and trigger the desired action based on its content.
+                actorExecutor.executeAction(context, yamlInput)
             },
             // Enable the button only if there is some text in the input field
             enabled = yamlInput.isNotBlank(),
