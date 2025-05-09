@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import android.content.Context
-import android.view.WindowManager
 
 // A simple class to process the YAML input and perform actions
-class ActorExecutor {
+class ActorViewModel {
 
     private val yamlMapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
 

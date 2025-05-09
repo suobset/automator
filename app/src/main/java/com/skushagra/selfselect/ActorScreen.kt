@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 fun ActorScreen() {
     var yamlInput by rememberSaveable { mutableStateOf("") } // State to hold the YAML input
     val context = LocalContext.current
-    val actorExecutor = remember { ActorExecutor() }
+    val actorViewModel = remember { ActorViewModel() }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -47,7 +47,7 @@ fun ActorScreen() {
         // Button below the Text Box
         Button(
             onClick = {
-                actorExecutor.executeAction(context, yamlInput)
+                actorViewModel.executeAction(context, yamlInput)
             },
             // Enable the button only if there is some text in the input field
             enabled = yamlInput.isNotBlank(),
