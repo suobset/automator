@@ -23,13 +23,6 @@ fun ActorScreen() {
             .padding(16.dp), // Add some padding around the content
         horizontalAlignment = Alignment.CenterHorizontally // Center content horizontally
     ) {
-        // Title for the screen
-        Text(
-            text = "Actor Actions",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         // Large Text Box for YAML Input
         OutlinedTextField(
             value = yamlInput,

@@ -16,11 +16,12 @@ import com.skushagra.selfselect.R
 @Composable
 fun MainScreen() {
     var currentScreen by rememberSaveable { mutableStateOf(AppScreen.CHAT) }
+    val title = if (currentScreen == AppScreen.CHAT) "Automator" else "Actor"
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My App") },
+                title = { Text(text = title) },
                 actions = {
                     // Navigation icons/buttons
                     IconButton(onClick = { currentScreen = AppScreen.CHAT }) {

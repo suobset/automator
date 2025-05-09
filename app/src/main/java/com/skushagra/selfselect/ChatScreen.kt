@@ -27,12 +27,6 @@ fun ChatScreen(
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        Text(
-            text = "Automator",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(8.dp)
-        )
-
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
