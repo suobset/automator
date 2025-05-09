@@ -53,6 +53,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.generativeai)
+    // For YAML Parsing
+    // In your module-level build.gradle.kts (SelfSelect/app/build.gradle.kts)
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
