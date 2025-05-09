@@ -1,20 +1,61 @@
 package com.skushagra.selfselect
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun ActorScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    var yamlInput by rememberSaveable { mutableStateOf("") } // State to hold the YAML input
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp), // Add some padding around the content
+        horizontalAlignment = Alignment.CenterHorizontally // Center content horizontally
     ) {
-        Text("Actor View (Blank")
+        // Title for the screen
+        Text(
+            text = "Actor Actions",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Large Text Box for YAML Input
+        OutlinedTextField(
+            value = yamlInput,
+            onValueChange = { yamlInput = it },
+            label = { Text("Enter YAML here...") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f) // Make the TextField take up available space
+                .padding(bottom = 16.dp), // Add padding below the TextField
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.None // No specific action for the keyboard (like "Done" or "Next")
+            )
+        )
+
+        // Button below the Text Box
+        Button(
+            onClick = {
+                // TODO: Implement the action to perform with the YAML input
+                println("Start Action button clicked with YAML:\n$yamlInput") // Placeholder action
+                // You would typically parse the yamlInput string here
+                // and trigger the desired action based on its content.
+            },
+            // Enable the button only if there is some text in the input field
+            enabled = yamlInput.isNotBlank(),
+            modifier = Modifier.fillMaxWidth() // Make the button fill the width
+        ) {
+            Text("Start Action")
+        }
     }
 }
 

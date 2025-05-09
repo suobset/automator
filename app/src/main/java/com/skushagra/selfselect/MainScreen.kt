@@ -8,10 +8,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource // Import painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.skushagra.selfselect.R // Make sure to import your R file
+import com.skushagra.selfselect.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
