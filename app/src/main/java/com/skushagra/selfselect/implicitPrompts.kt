@@ -9,4 +9,4 @@ const val prompt1 =
             "option: String (OR unused)" +
             "\n" +
             "The options for action are:\n" +
-            "pull_notification_bar_down"
+            "pull_down_notification_bar"

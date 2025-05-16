@@ -24,4 +24,9 @@ sealed interface UiState {
      * There was an error generating text
      */
     data class Error(val errorMessage: String) : UiState
+
+    /**
+     * Show the YAML dialog
+     */
+    data class ShowYamlDialog(val yaml: String) : UiState  // Add this to the sealed interface
 }

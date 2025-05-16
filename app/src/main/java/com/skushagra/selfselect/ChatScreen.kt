@@ -12,19 +12,42 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.tooling.preview.Preview
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.AlertDialog // Import AlertDialog
 
 @Composable
 fun ChatScreen(
     chatViewModel: ChatViewModel = viewModel()
 ) {
     var prompt by rememberSaveable { mutableStateOf("") }
-
     val chatHistory by chatViewModel.chatHistory.collectAsState()
     val uiState by chatViewModel.uiState.collectAsState()
+    val context = LocalContext.current // Get context for clipboard manager
+
+    // State to control the dialog visibility and content
+    var showYamlDialog by rememberSaveable { mutableStateOf(false) }
+    var yamlToCopy by rememberSaveable { mutableStateOf("") }
 
     // Only send the initial message when the composable is first opened
     LaunchedEffect(Unit) {
         chatViewModel.sendInitialMessage()
+    }
+
+    // Observe uiState for changes, and update dialog state
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is UiState.ShowYamlDialog -> {
+                showYamlDialog = true
+                yamlToCopy = (uiState as UiState.ShowYamlDialog).yaml
+            }
+            else -> {
+                showYamlDialog = false // Dismiss dialog for other states
+                yamlToCopy = ""
+            }
+        }
     }
 
     Column(
@@ -102,6 +125,48 @@ fun ChatScreen(
                 Text("Send")
             }
         }
+    }
+
+    // Show dialog when showYamlDialog is true
+    if (showYamlDialog && yamlToCopy.isNotBlank()) {
+        AlertDialog(
+            onDismissRequest = {
+                showYamlDialog = false
+                yamlToCopy = ""
+                chatViewModel.onDialogResult(false) // Notify ViewModel of dismissal
+            },
+            title = { Text("YAML Content") },
+            text = {
+                // Use a SelectableText to allow copying
+                Text(text = yamlToCopy, modifier = Modifier.padding(8.dp))
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val clipboardManager =
+                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clipData = ClipData.newPlainText("YAML", yamlToCopy)
+                        clipboardManager.setPrimaryClip(clipData)
+                        // Consider showing a Toast here, or let the ViewModel handle it
+                        chatViewModel.onDialogResult(true) // Notify ViewModel of copy
+                        showYamlDialog = false // Dismiss dialog
+                        yamlToCopy = ""
+
+                    }) {
+                    Text("Copy")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showYamlDialog = false
+                    yamlToCopy = ""
+                    chatViewModel.onDialogResult(false) // Notify ViewModel of ignore
+                }) {
+                    Text("Ignore")
+                }
+            },
+            // Prevent dialog from being dismissed by tapping outside.
+        )
     }
 }
 
