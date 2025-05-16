@@ -86,7 +86,7 @@ fun ChatScreen(
                     .weight(1f)
                     .padding(end = 8.dp)
             )
-
+            chatViewModel.sendInitialMessage()
             Button(
                 onClick = {
                     chatViewModel.sendMessage(prompt)
@@ -103,6 +103,6 @@ fun ChatScreen(
 
 @Preview(showSystemUi = true)
 @Composable
-fun BakingScreenPreview() {
+fun ChatScreenPreview() {
     ChatScreen()
 }

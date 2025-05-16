@@ -28,7 +28,23 @@ class ChatViewModel : ViewModel() {
 
     // Start a new chat with the GenerativeModel
     private val conversation: Chat = generativeModel.startChat()
+    // TODO: Implement initialization under a coroutine
+    fun sendInitialMessage() {
+        _uiState.value = UiState.Loading
 
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = conversation.sendMessage(prompt1) // Call send on the Chat object
+                val reply = "Automator is ready."
+                _chatHistory.value += ChatMessage(reply.toString(), Sender.AUTOMATOR)
+                _uiState.value = UiState.Success(reply.toString())
+            } catch (e: Exception) {
+                val error = e.localizedMessage ?: "Something went wrong."
+                _chatHistory.value += ChatMessage(error, Sender.AUTOMATOR)
+                _uiState.value = UiState.Error(error)
+            }
+        }
+    }
     private val _chatHistory = MutableStateFlow<List<ChatMessage>>(emptyList())
     val chatHistory: StateFlow<List<ChatMessage>> = _chatHistory.asStateFlow()
 
