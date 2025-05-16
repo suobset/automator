@@ -14,20 +14,21 @@ class ActorViewModel {
 
     fun executeAction(context: Context, yamlInput: String) {
         try {
-            val action = yamlMapper.readValue(yamlInput, ActorAction::class.java)
-
-            when (action.action) {
-                "pull_down_notification_bar" -> {
-                    val service = ActorAccessibilityService.instance
-                    if (service != null) {
+            val service = ActorAccessibilityService.instance
+            if (service == null) {
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                context.startActivity(intent)
+            }
+            else {
+                val action = yamlMapper.readValue(yamlInput, ActorAction::class.java)
+                when (action.action) {
+                    // Switch case for each action starts here
+                    "pull_down_notification_bar" -> {
                         service.pullDownNotificationBar()
-                    } else {
-                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                        context.startActivity(intent)
                     }
-                }
-                else -> {
-                    println("Unknown action: ${action.action}")
+                    else -> {
+                        println("Unknown action: ${action.action}")
+                    }
                 }
             }
         } catch (e: Exception) {

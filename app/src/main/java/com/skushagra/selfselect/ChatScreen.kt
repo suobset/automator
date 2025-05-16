@@ -22,6 +22,11 @@ fun ChatScreen(
     val chatHistory by chatViewModel.chatHistory.collectAsState()
     val uiState by chatViewModel.uiState.collectAsState()
 
+    // Only send the initial message when the composable is first opened
+    LaunchedEffect(Unit) {
+        chatViewModel.sendInitialMessage()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -86,7 +91,6 @@ fun ChatScreen(
                     .weight(1f)
                     .padding(end = 8.dp)
             )
-            chatViewModel.sendInitialMessage()
             Button(
                 onClick = {
                     chatViewModel.sendMessage(prompt)
