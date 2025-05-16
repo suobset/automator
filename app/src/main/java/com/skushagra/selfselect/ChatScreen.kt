@@ -12,6 +12,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.tooling.preview.Preview
+import com.skushagra.selfselect.ActorViewModel
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -26,7 +27,7 @@ fun ChatScreen(
     val chatHistory by chatViewModel.chatHistory.collectAsState()
     val uiState by chatViewModel.uiState.collectAsState()
     val context = LocalContext.current // Get context for clipboard manager
-
+    val actorViewModel = remember { ActorViewModel() }
     // State to control the dialog visibility and content
     var showYamlDialog by rememberSaveable { mutableStateOf(false) }
     var yamlToCopy by rememberSaveable { mutableStateOf("") }
@@ -143,17 +144,13 @@ fun ChatScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val clipboardManager =
-                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clipData = ClipData.newPlainText("YAML", yamlToCopy)
-                        clipboardManager.setPrimaryClip(clipData)
-                        // Consider showing a Toast here, or let the ViewModel handle it
+                        actorViewModel.executeAction(context, yamlToCopy)
                         chatViewModel.onDialogResult(true) // Notify ViewModel of copy
                         showYamlDialog = false // Dismiss dialog
                         yamlToCopy = ""
 
                     }) {
-                    Text("Copy")
+                    Text("Execute YAML")
                 }
             },
             dismissButton = {

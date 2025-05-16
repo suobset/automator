@@ -8,5 +8,7 @@ const val prompt1 =
             "action: String" +
             "option: String (OR unused)" +
             "\n" +
+            "If option is unused, we do not include it. In that case, it is just \n" +
+            "action: String \n" +
             "The options for action are:\n" +
             "pull_down_notification_bar"

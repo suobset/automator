@@ -44,7 +44,7 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = conversation.sendMessage(prompt1)
-                val reply = response.text ?: "Automator is ready."
+                val reply = "Automator is ready."
                 _chatHistory.value += ChatMessage(reply, Sender.AUTOMATOR)
                 _uiState.value = UiState.Success(reply)
             } catch (e: Exception) {
@@ -57,8 +57,6 @@ class ChatViewModel : ViewModel() {
 
     private val _chatHistory = MutableStateFlow<List<ChatMessage>>(emptyList())
     val chatHistory: StateFlow<List<ChatMessage>> = _chatHistory.asStateFlow()
-
-
 
     fun sendMessage(prompt: String) {
         _chatHistory.value += ChatMessage(prompt, Sender.USER)
