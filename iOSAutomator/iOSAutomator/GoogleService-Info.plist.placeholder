@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>INFO</key>
+	<string>This is a placeholder file. Please replace it with the GoogleService-Info.plist file you download from your Firebase project console.</string>
+	<key>NOTE</key>
+	<string>After downloading your actual GoogleService-Info.plist, remove '.placeholder' from this filename and add the actual file to your Xcode project, ensuring it's added to the 'iOSAutomator' target.</string>
+</dict>
+</plist>
