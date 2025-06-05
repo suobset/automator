@@ -9,7 +9,6 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.google.ai.client.generativeai.Chat
 import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.InvalidApiKeyException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -104,18 +103,33 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         // No valid stored key, or initialization failed. Try BuildConfig.apiKey
-        // BuildConfig.apiKey might be empty string if not in local.properties
-        val buildConfigKey = BuildConfig.apiKey
-        if (buildConfigKey.isNotEmpty() && initializeGenerativeModel(buildConfigKey)) {
-            Log.d(TAG, "Initialized with BuildConfig API key. Storing it.")
-            storeApiKey(context, buildConfigKey) // Store if it's valid and wasn't the stored one
-            _uiState.value = UiState.Loading
-            sendInitialMessage()
-            return
+        val buildConfigKeyValue: String? = try {
+            BuildConfig.apiKey
+        } catch (t: Throwable) { // Catch Throwable for maximum defensiveness including NoClassDefFoundError etc.
+            Log.e(TAG, "Critical error accessing BuildConfig.apiKey. Check build configuration. Error: ${t.message}", t)
+            null // Treat as if key is not available
+        }
+
+        if (!buildConfigKeyValue.isNullOrEmpty()) { // Check if it's not null AND not empty/blank
+            // Only attempt to initialize if the key string actually has content
+            if (initializeGenerativeModel(buildConfigKeyValue)) {
+                 Log.d(TAG, "Initialized with BuildConfig API key. Storing it.")
+                 // Ensure storedApiKey was indeed null or different before deciding to store buildConfigKeyValue
+                 // This logic was: storeApiKey(context, buildConfigKeyValue) if storedApiKey was null/empty.
+                 // Let's refine: only store if initializeGenerativeModel was successful with it AND it's different from stored.
+                 // The previous logic: storeApiKey(context, buildConfigKeyValue) was inside the successful init block.
+                 // And it was only called if the storedApiKey path wasn't taken. This is fine.
+                 storeApiKey(context, buildConfigKeyValue)
+                 _uiState.value = UiState.Loading
+                 sendInitialMessage()
+                 return
+            }
+            // If initializeGenerativeModel failed with a non-empty buildConfigKeyValue,
+            // it implies the key from BuildConfig is invalid. Fall through to show dialog.
         }
 
         // If we reach here, no key worked or all keys were blank/invalid.
-        Log.i(TAG, "No valid API key found or initialization failed. Prompting for API key.")
+        Log.i(TAG, "No valid API key found or initialization failed (checked stored and BuildConfig). Prompting for API key.")
         _uiState.value = UiState.ShowApiKeyDialog
     }
 
