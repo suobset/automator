@@ -179,6 +179,6 @@ Double-check the YAML syntax, action types, and parameter names against the Acti
 
 ## License
 
-Copyright 2025, [Kushagra Srivastava](https://skushagra.com) (Licensed under GNU GPLv2)
+Copyright 2025, [Kushagra Srivastava](https://skushagra.com) (Licensed under GNU AGPLv3)
 
-> Note: The project is under GPLv2 during development. Subsequent releases may be licensed under separate conditions and licenses.
+> Note: The project is under AGPLv3 during development. Subsequent releases may be licensed under separate conditions and licenses.
