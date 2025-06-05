@@ -25,6 +25,8 @@ For example, "Open Wikipedia and navigate to the search bar" works perfectly fin
 
 However, "Take a picture from my front camera" is currently not possible, as it requires the camera to already be in the foreground.
 
+Right now, the "Actor" performs actions. The next stage is for it to perceive the result. After tapping "Login," how does it know it's on the dashboard screen? This involves screen-reading, OCR, and understanding the "state" of the app. This is the next logical step for me to build into this project.
+
 Parallel to this project, I am also working on a fine-tuned LLM that communicates in regional languages that do not follow a latin script.
 I hope to share more details regarding this in the future [on my blog](https://skushagra.com). Model weights will be open.
 
