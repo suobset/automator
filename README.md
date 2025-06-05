@@ -1,3 +1,5 @@
+![Temp Banner](https://github.com/user-attachments/assets/e01f27cd-c633-4c77-9908-aeb4dd2c8a84)
+
 # SelfSelect: an LLM-based Android scripting/automating platform
 
 ## Short Description
@@ -12,11 +14,21 @@ During the first run, the App will prompt you are the API key as a pop-up messag
 The long term goal for the app is to democratize computation for people coming from regional areas with little no no knowledge in English, or using a device.
 This was specifically inspired by my own experiences helping people with limited reading/writing abilities to use their devices.
 
+If you're curious, I have already written a [blog post](https://www.skushagra.com/2025/05/zero-android-experience-to-working.html) a while ago demonstrating how I learnt Android dev from scratch, and how AI supplemented the process to an extent here.
+The post also contains details on what this app does, and how we achieve it.
+
+### Things to note
+
+Most importantly, SelfSelect/Automator is currently a very early-stage product. While I have been able to harness most of Android's accessibility features (including chaining of different YAML commands, and LLM prompt-engineering + RAG for YAML references), not all actions are going to be possible. Specifically, the current challenge (as of June 05) is the invocation of any action within a different app.
+
+For example, "Open Wikipedia and navigate to the search bar" works perfectly fine. This is an end goal that can be invoked from the app itself.
+
+However, "Take a picture from my front camera" is currently not possible, as it requires the camera to already be in the foreground.
+
 Parallel to this project, I am also working on a fine-tuned LLM that communicates in regional languages that do not follow a latin script.
 I hope to share more details regarding this in the future [on my blog](https://skushagra.com). Model weights will be open.
 
-If you're curious, I have already written a [blog post](https://www.skushagra.com/2025/05/zero-android-experience-to-working.html) a while ago demonstrating how I learnt Android dev from scratch, and how AI supplemented the process to an extent here.
-The post also contains details on what this app does, and how we achieve it.
+The first non-Latin regional languages I am targeting are Hindi and Arabic.
 
 ## Features
 *   **Natural Language Control:** Interact with your device by typing commands in a chat interface.
@@ -33,11 +45,11 @@ The post also contains details on what this app does, and how we achieve it.
     *   Introducing delays/waits in scripts.
     *   Experimental support for sending text messages.
 
-## Screenshots
+## Screenshots/Workflows
 
-<iframe width="560" height="315" src="https://youtube.com/shorts/AdIxV9F6LuE?si=dzL61iN8xsXcFJnt" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<img src="https://github.com/user-attachments/assets/b6962bf7-ffe3-4ab2-b7e3-c9c4f5b1ef83" width="30%">
 
-(soon, need to make some cool gifs)
+(More incoming, including editing YAML, customizations, chained actions, etc.)
 
 ## Requirements / Prerequisites
 *   **Android Studio:** Latest stable version recommended (e.g., Hedgehog or newer).
@@ -169,4 +181,4 @@ Double-check the YAML syntax, action types, and parameter names against the Acti
 
 Copyright 2025, [Kushagra Srivastava](https://skushagra.com) (Licensed under GNU GPLv2)
 
-> Note: The project is under GPLv2 during development. Subsequent releases may be licensed under separate conditions.
+> Note: The project is under GPLv2 during development. Subsequent releases may be licensed under separate conditions and licenses.
