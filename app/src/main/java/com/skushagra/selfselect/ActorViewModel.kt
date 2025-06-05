@@ -6,34 +6,167 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import android.util.Log // For better logging
 
-// A simple class to process the YAML input and perform actions
 class ActorViewModel {
 
     private val yamlMapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
+    private val TAG = "ActorViewModel" // For Logcat
 
     fun executeAction(context: Context, yamlInput: String) {
         try {
             val service = ActorAccessibilityService.instance
             if (service == null) {
+                Log.w(TAG, "Accessibility service not enabled. Redirecting to settings.")
                 val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK // Required if context is not Activity
                 context.startActivity(intent)
+                return // Stop further execution if service is not available
             }
-            else {
-                val action = yamlMapper.readValue(yamlInput, ActorAction::class.java)
-                when (action.action) {
-                    // Switch case for each action starts here
-                    "pull_down_notification_bar" -> {
+
+            Log.d(TAG, "Received YAML input: $yamlInput")
+            val script = try {
+                yamlMapper.readValue(yamlInput, ActorScript::class.java)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing YAML: ${e.message}", e)
+                // Consider providing user feedback here if possible, e.g., via a callback or LiveData
+                return
+            }
+
+            if (script.actions.isEmpty()) {
+                Log.d(TAG, "No actions found in the script.")
+                return
+            }
+
+            for (actorAction in script.actions) {
+                Log.d(TAG, "Executing action: ${actorAction.actionType}, Description: ${actorAction.description ?: "N/A"}, Params: ${actorAction.parameters}")
+                when (actorAction.actionType) {
+                    ActionTypes.PULL_DOWN_NOTIFICATION_BAR -> {
                         service.pullDownNotificationBar()
                     }
+                    ActionTypes.NAVIGATE_HOME -> {
+                        service.navigateHome()
+                    }
+                    ActionTypes.NAVIGATE_BACK -> {
+                        service.navigateBack()
+                    }
+                    ActionTypes.OPEN_APP -> {
+                        val appName = actorAction.parameters?.get(ParameterKeys.APP_NAME)
+                        val packageName = actorAction.parameters?.get(ParameterKeys.PACKAGE_NAME)
+                        if (!appName.isNullOrBlank()) {
+                            service.openApp(appName)
+                        } else if (!packageName.isNullOrBlank()) {
+                            service.openAppByPackageName(packageName)
+                        } else {
+                            Log.e(TAG, "OPEN_APP action requires '${ParameterKeys.APP_NAME}' or '${ParameterKeys.PACKAGE_NAME}' parameter.")
+                        }
+                    }
+                    ActionTypes.LAUNCH_URL -> {
+                        val url = actorAction.parameters?.get(ParameterKeys.URL)
+                        if (!url.isNullOrBlank()) {
+                            service.launchUrl(url)
+                        } else {
+                            Log.e(TAG, "LAUNCH_URL action requires '${ParameterKeys.URL}' parameter.")
+                        }
+                    }
+                    ActionTypes.TYPE_TEXT -> {
+                        val textToType = actorAction.parameters?.get(ParameterKeys.TEXT_TO_TYPE)
+                        val targetResId = actorAction.parameters?.get(ParameterKeys.ELEMENT_RESOURCE_ID)
+                        val targetText = actorAction.parameters?.get(ParameterKeys.ELEMENT_TEXT_TO_CLICK)
+                        if (textToType != null) { // textToType can be empty string
+                            service.typeText(textToType, targetResId, targetText)
+                        } else {
+                            Log.e(TAG, "TYPE_TEXT action requires '${ParameterKeys.TEXT_TO_TYPE}' parameter.")
+                        }
+                    }
+                    ActionTypes.CLICK_ELEMENT -> {
+                        val elementText = actorAction.parameters?.get(ParameterKeys.ELEMENT_TEXT_TO_CLICK)
+                        val resourceId = actorAction.parameters?.get(ParameterKeys.ELEMENT_RESOURCE_ID)
+                        val contentDescription = actorAction.parameters?.get(ParameterKeys.ELEMENT_CONTENT_DESCRIPTION)
+                        if (elementText != null || resourceId != null || contentDescription != null) {
+                            service.clickElement(elementText, resourceId, contentDescription)
+                        } else {
+                            Log.e(TAG, "CLICK_ELEMENT action requires at least one of '${ParameterKeys.ELEMENT_TEXT_TO_CLICK}', '${ParameterKeys.ELEMENT_RESOURCE_ID}', or '${ParameterKeys.ELEMENT_CONTENT_DESCRIPTION}'.")
+                        }
+                    }
+                    ActionTypes.SCROLL_VIEW -> {
+                        val direction = actorAction.parameters?.get(ParameterKeys.SCROLL_DIRECTION)
+                        val targetResId = actorAction.parameters?.get(ParameterKeys.SCROLL_TARGET_RESOURCE_ID)
+                        val targetText = actorAction.parameters?.get(ParameterKeys.SCROLL_TARGET_TEXT)
+                        if (!direction.isNullOrBlank()) {
+                            service.scrollView(direction, targetResId, targetText)
+                        } else {
+                            Log.e(TAG, "SCROLL_VIEW action requires '${ParameterKeys.SCROLL_DIRECTION}' parameter.")
+                        }
+                    }
+                    ActionTypes.WAIT -> {
+                        val durationString = actorAction.parameters?.get(ParameterKeys.WAIT_DURATION_MS)
+                        try {
+                            val durationMs = durationString?.toLong()
+                            if (durationMs != null && durationMs > 0) {
+                                Log.d(TAG, "Waiting for ${durationMs}ms")
+                                Thread.sleep(durationMs)
+                            } else {
+                                Log.e(TAG, "WAIT action requires a valid positive '${ParameterKeys.WAIT_DURATION_MS}'. Found: $durationString")
+                            }
+                        } catch (e: NumberFormatException) {
+                            Log.e(TAG, "Invalid format for '${ParameterKeys.WAIT_DURATION_MS}'. Value: '$durationString'. Error: ${e.message}", e)
+                        } catch (e: InterruptedException) {
+                            Log.w(TAG, "Wait action interrupted.", e)
+                            Thread.currentThread().interrupt() // Restore interruption status
+                        }
+                    }
+                    ActionTypes.SEND_TEXT_MESSAGE -> {
+                        val recipientName = actorAction.parameters?.get(ParameterKeys.RECIPIENT_NAME)
+                        val recipientNumber = actorAction.parameters?.get(ParameterKeys.RECIPIENT_NUMBER)
+                        val messageBody = actorAction.parameters?.get(ParameterKeys.MESSAGE_BODY)
+                        if ((!recipientName.isNullOrBlank() || !recipientNumber.isNullOrBlank()) && messageBody != null) {
+                            service.sendTextMessage(recipientName, recipientNumber, messageBody)
+                        } else {
+                            Log.e(TAG, "SEND_TEXT_MESSAGE requires ('${ParameterKeys.RECIPIENT_NAME}' or '${ParameterKeys.RECIPIENT_NUMBER}') and '${ParameterKeys.MESSAGE_BODY}'.")
+                        }
+                    }
+                    ActionTypes.TAKE_SCREENSHOT -> {
+                        // service.takeScreenshot() // Needs careful implementation for file path & permissions
+                        Log.i(TAG, "TAKE_SCREENSHOT action called (not yet fully implemented in service).")
+                    }
+                    ActionTypes.TOGGLE_WIFI -> {
+                        val state = actorAction.parameters?.get(ParameterKeys.WIFI_STATE)
+                        if (!state.isNullOrBlank()) {
+                            // service.toggleWifi(state.equals("ON", ignoreCase = true))
+                            Log.i(TAG, "TOGGLE_WIFI action called with state $state (not yet fully implemented in service).")
+                        } else {
+                            Log.e(TAG, "TOGGLE_WIFI action requires '${ParameterKeys.WIFI_STATE}' parameter (ON/OFF).")
+                        }
+                    }
+                    ActionTypes.TOGGLE_BLUETOOTH -> {
+                        val state = actorAction.parameters?.get(ParameterKeys.BLUETOOTH_STATE)
+                        if (!state.isNullOrBlank()) {
+                            // service.toggleBluetooth(state.equals("ON", ignoreCase = true))
+                            Log.i(TAG, "TOGGLE_BLUETOOTH action called with state $state (not yet fully implemented in service).")
+                        } else {
+                            Log.e(TAG, "TOGGLE_BLUETOOTH action requires '${ParameterKeys.BLUETOOTH_STATE}' parameter (ON/OFF).")
+                        }
+                    }
+                    ActionTypes.SET_VOLUME -> {
+                        val volumeLevel = actorAction.parameters?.get(ParameterKeys.VOLUME_LEVEL)
+                        if (!volumeLevel.isNullOrBlank()) {
+                            // service.setVolume(volumeLevel)
+                            Log.i(TAG, "SET_VOLUME action called with level $volumeLevel (not yet fully implemented in service).")
+                        } else {
+                            Log.e(TAG, "SET_VOLUME action requires '${ParameterKeys.VOLUME_LEVEL}' parameter.")
+                        }
+                    }
+                    // ... (add other cases as per ActionTypes, initially logging them)
                     else -> {
-                        println("Unknown action: ${action.action}")
+                        Log.w(TAG, "Unknown or not yet implemented action_type: ${actorAction.actionType}")
                     }
                 }
             }
         } catch (e: Exception) {
-            println("Error parsing YAML or executing action: ${e.message}")
-            e.printStackTrace()
+            // Catch any other unexpected errors during action execution loop or setup
+            Log.e(TAG, "Error executing action script: ${e.message}", e)
+            // It might be useful to inform the user if an entire script fails catastrophically
         }
     }
 }
