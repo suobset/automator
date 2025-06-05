@@ -298,18 +298,21 @@ class ActorAccessibilityService : AccessibilityService() {
             return
         }
 
-        val action = when (direction.uppercase(Locale.ROOT)) {
-            "UP" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AccessibilityNodeInfo.ACTION_SCROLL_UP else AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
-            "DOWN" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AccessibilityNodeInfo.ACTION_SCROLL_DOWN else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
-            "LEFT" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AccessibilityNodeInfo.ACTION_SCROLL_LEFT else AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD // Assuming LTR
-            "RIGHT" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AccessibilityNodeInfo.ACTION_SCROLL_RIGHT else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD // Assuming LTR
-            "FORWARD" -> AccessibilityNodeInfo.ACTION_SCROLL_FORWARD // Generic
-            "BACKWARD" -> AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD // Generic
+        val action: Int = when (direction.uppercase(Locale.ROOT)) {
+            "UP" -> AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
+            "LEFT" -> AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
+            "DOWN" -> AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+            "RIGHT" -> AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+            "FORWARD" -> AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+            "BACKWARD" -> AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
             else -> {
-                Log.w(TAG, "SCROLL_VIEW: Unknown scroll direction '$direction'. Defaulting to FORWARD.")
+                Log.w(TAG, "SCROLL_VIEW: Unknown scroll direction '$direction'. Defaulting to ACTION_SCROLL_FORWARD.")
                 AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
             }
         }
+
+        Log.d(TAG, "Performing scroll action: $action for direction $direction on node $scrollableNode")
+        // Assuming performActionOnNode is defined elsewhere
         if (!performActionOnNode(scrollableNode, action)) {
             Log.e(TAG, "SCROLL_VIEW: Failed to scroll $direction on $scrollableNode")
         } else {

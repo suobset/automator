@@ -38,20 +38,21 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private const val PREFS_NAME = "selfselect_prefs"
         private const val API_KEY_NAME = "api_key"
+        private const val TAG = "ChatViewModel" // Added TAG
     }
 
     init {
         checkForApiKey(application.applicationContext)
     }
 
-    private fun storeApiKey(apiKey: String, context: Context) {
+    private fun storeApiKey(context: Context, apiKey: String) { // Corrected parameter order
         val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
         val sharedPreferences = EncryptedSharedPreferences.create(
-            PREFS_NAME,
-            masterKeyAlias,
-            context,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            PREFS_NAME, // Filename
+            masterKeyAlias, // Master Key
+            context, // Context
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV, // Key Encryption Scheme
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM // Value Encryption Scheme
         )
         with(sharedPreferences.edit()) {
             putString(API_KEY_NAME, apiKey)
@@ -62,61 +63,86 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private fun retrieveApiKey(context: Context): String? {
         val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
         val sharedPreferences = EncryptedSharedPreferences.create(
-            PREFS_NAME,
-            masterKeyAlias,
-            context,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            PREFS_NAME, // Filename
+            masterKeyAlias, // Master Key
+            context, // Context
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV, // Key Encryption Scheme
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM // Value Encryption Scheme
         )
         return sharedPreferences.getString(API_KEY_NAME, null)
     }
 
     private fun initializeGenerativeModel(apiKey: String): Boolean {
+        if (apiKey.isBlank()) { // Prevent trying to init with a blank key from storage/BuildConfig
+            Log.w(TAG, "API Key is blank, initialization skipped.")
+            return false
+        }
         return try {
             generativeModel = GenerativeModel(
-                modelName = "gemini-1.5-flash",
+                modelName = "gemini-1.5-flash", // Or your desired model
                 apiKey = apiKey
             )
-            conversation = generativeModel?.startChat()
+            conversation = generativeModel?.startChat() // Initialize conversation
+            Log.i(TAG, "GenerativeModel initialized successfully.")
             true
-        } catch (e: InvalidApiKeyException) {
-            Log.e("ChatViewModel", "Invalid API Key: ${e.message}")
-            updateUiStateToError("Invalid API Key. Please check your API key and try again.")
-            false
-        } catch (e: Exception) {
-            Log.e("ChatViewModel", "Error initializing GenerativeModel: ${e.message}")
-            updateUiStateToError("An unexpected error occurred while initializing the AI model.")
+        } catch (e: Exception) { // Catch all exceptions for robustness
+            Log.e(TAG, "Error initializing GenerativeModel: ${e.message}", e)
+            // Clear potentially partially initialized model/conversation on failure
+            generativeModel = null
+            conversation = null
             false
         }
     }
 
-    private fun checkForApiKey(context: Context) {
-        val apiKey = retrieveApiKey(context)
-        if (apiKey == null) {
-            _uiState.value = UiState.ShowApiKeyDialog
-        } else {
-            if (initializeGenerativeModel(apiKey)) {
-                sendInitialMessage()
-            }
+    fun checkForApiKey(context: Context) { // Keep public if called from UI, or use in init
+        val storedApiKey = retrieveApiKey(context)
+        if (initializeGenerativeModel(storedApiKey ?: "")) { // Pass empty string if null
+            Log.d(TAG, "Initialized with stored API key.")
+            _uiState.value = UiState.Loading // Set loading before sending initial message
+            sendInitialMessage()
+            return
         }
+
+        // No valid stored key, or initialization failed. Try BuildConfig.apiKey
+        // BuildConfig.apiKey might be empty string if not in local.properties
+        val buildConfigKey = BuildConfig.apiKey
+        if (buildConfigKey.isNotEmpty() && initializeGenerativeModel(buildConfigKey)) {
+            Log.d(TAG, "Initialized with BuildConfig API key. Storing it.")
+            storeApiKey(context, buildConfigKey) // Store if it's valid and wasn't the stored one
+            _uiState.value = UiState.Loading
+            sendInitialMessage()
+            return
+        }
+
+        // If we reach here, no key worked or all keys were blank/invalid.
+        Log.i(TAG, "No valid API key found or initialization failed. Prompting for API key.")
+        _uiState.value = UiState.ShowApiKeyDialog
     }
+
 
     fun sendInitialMessage() {
-        if (conversation == null) {
-            // This case should ideally be handled by checkForApiKey ensuring model is initialized
-            // or by prompting for API key again if initialization failed.
-            updateUiStateToError("AI Model not initialized. Please check your API Key.")
+        if (conversation == null) { // Guard against null conversation
+            Log.w(TAG, "sendInitialMessage: Conversation is null, cannot send initial message.")
+            // This state should ideally be prevented by checkForApiKey or submitApiKey
+            // ensuring the model (and thus conversation) is initialized.
+            // If it happens, it means there was a logic error earlier.
+            // Re-triggering API key check might be an option, or just show error.
+            _uiState.value = UiState.Error("AI model not ready. Please check API key.")
+            // Potentially show API key dialog again if this error state is reached.
+            // viewModelScope.launch { delay(500); _uiState.value = UiState.ShowApiKeyDialog }
             return
         }
         _uiState.value = UiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = conversation?.sendMessage(prompt1)
-                val reply = "Automator is ready."
+                // Ensure prompt1 is defined or passed appropriately
+                val response = conversation?.sendMessage(prompt1) // Use safe call
+                val reply = response?.text ?: "Automator is ready but no specific greeting generated."
                 _chatHistory.value += ChatMessage(reply, Sender.AUTOMATOR)
                 _uiState.value = UiState.Success(reply)
             } catch (e: Exception) {
-                val error = e.localizedMessage ?: "Something went wrong."
+                Log.e(TAG, "Error sending initial message: ${e.message}", e)
+                val error = e.localizedMessage ?: "Error during initial communication."
                 _chatHistory.value += ChatMessage(error, Sender.AUTOMATOR)
                 _uiState.value = UiState.Error(error)
             }
@@ -128,8 +154,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun sendMessage(prompt: String) {
         if (conversation == null) {
-            updateUiStateToError("AI Model not initialized. Please check your API Key.")
-            _chatHistory.value += ChatMessage("Error: AI Model not initialized.", Sender.AUTOMATOR)
+            Log.w(TAG, "sendMessage: Conversation is null.")
+            _uiState.value = UiState.Error("AI model not ready. Please check API key.")
+            _chatHistory.value += ChatMessage("Error: AI Model not initialized. Cannot send message.", Sender.AUTOMATOR)
+            // Consider re-showing API key dialog
+            // viewModelScope.launch { delay(500); _uiState.value = UiState.ShowApiKeyDialog }
             return
         }
         _chatHistory.value += ChatMessage(prompt, Sender.USER)
@@ -141,7 +170,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 _chatHistory.value += ChatMessage(reply, Sender.AUTOMATOR)
                 extractYamlAndPrompt(reply)
             } catch (e: Exception) {
-                val error = e.localizedMessage ?: "Something went wrong."
+                Log.e(TAG, "Error sending message: ${e.message}", e)
+                val error = e.localizedMessage ?: "Something went wrong while sending the message."
                 _chatHistory.value += ChatMessage(error, Sender.AUTOMATOR)
                 _uiState.value = UiState.Error(error)
             }
@@ -150,27 +180,33 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun submitApiKey(apiKey: String, context: Context) {
         if (apiKey.isBlank()) {
+            Log.w(TAG, "Submitted API Key is blank.")
             _uiState.value = UiState.Error("API Key cannot be empty.")
-            // Transition back to ShowApiKeyDialog after showing the error or let user retry
+            // To ensure dialog is re-shown after error, it's better if ShowApiKeyDialog can carry an error.
+            // For now, a slight delay then forcing ShowApiKeyDialog.
             viewModelScope.launch {
-                kotlinx.coroutines.delay(2000) // Show error for 2 seconds
-                if (_uiState.value is UiState.Error) { // Check if current state is still the error
-                    _uiState.value = UiState.ShowApiKeyDialog
-                }
+                kotlinx.coroutines.delay(100) // Minimal delay, Error state might be missed by Snackbar
+                _uiState.value = UiState.ShowApiKeyDialog
             }
             return
         }
+
         if (initializeGenerativeModel(apiKey)) {
-            storeApiKey(apiKey, context)
-            sendInitialMessage() // This will set state to Loading then Success/Error
+            Log.i(TAG, "Submitted API Key is valid. Storing and initializing chat.")
+            storeApiKey(context, apiKey) // Corrected parameter order
+            _uiState.value = UiState.Loading
+            sendInitialMessage()
         } else {
-            // initializeGenerativeModel already updated UI state to Error and logged
-            // Optionally, ensure dialog is reshown if needed
-             _uiState.value = UiState.ShowApiKeyDialog
+            Log.w(TAG, "Submitted API Key is invalid.")
+            _uiState.value = UiState.Error("Invalid API Key provided. Please check it and try again.")
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(100)
+                _uiState.value = UiState.ShowApiKeyDialog // Re-show dialog
+            }
         }
     }
 
-    fun updateUiStateToError(message: String) {
+    fun updateUiStateToError(message: String) { // This is kept if other parts of UI need to set generic errors
         _uiState.value = UiState.Error(message)
     }
 
