@@ -18,6 +18,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.AlertDialog // Import AlertDialog
+import com.skushagra.selfselect.ui.ApiKeyEntryDialog // Import the ApiKeyEntryDialog
 
 @Composable
 fun ChatScreen(
@@ -32,21 +33,20 @@ fun ChatScreen(
     var showYamlDialog by rememberSaveable { mutableStateOf(false) }
     var yamlToCopy by rememberSaveable { mutableStateOf("") }
 
-    // Only send the initial message when the composable is first opened
-    LaunchedEffect(Unit) {
-        chatViewModel.sendInitialMessage()
-    }
-
     // Observe uiState for changes, and update dialog state
     LaunchedEffect(uiState) {
-        when (uiState) {
+        when (val currentState = uiState) { // Assign uiState to currentState for smart casting
             is UiState.ShowYamlDialog -> {
                 showYamlDialog = true
-                yamlToCopy = (uiState as UiState.ShowYamlDialog).yaml
+                yamlToCopy = currentState.yaml
+            }
+            is UiState.ShowApiKeyDialog -> {
+                // This state is now handled by the main Column's when(uiState) block
+                // No specific action needed here, but kept for clarity if future needs arise
             }
             else -> {
-                showYamlDialog = false // Dismiss dialog for other states
-                yamlToCopy = ""
+                showYamlDialog = false // Dismiss YAML dialog for other states
+                // yamlToCopy = "" // Not strictly necessary to clear here as it's only used when showYamlDialog is true
             }
         }
     }
@@ -56,89 +56,95 @@ fun ChatScreen(
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(8.dp),
-            reverseLayout = true
-        ) {
-            items(chatHistory.reversed()) { message ->
-                val isUser = message.sender == Sender.USER
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
-                ) {
-                    Text(
-                        text = if (isUser) "You" else "Automator",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Surface(
-                        tonalElevation = 2.dp,
-                        shape = MaterialTheme.shapes.medium,
-                        color = if (isUser) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant,
+        // Display ApiKeyEntryDialog if the state is ShowApiKeyDialog
+        if (uiState is UiState.ShowApiKeyDialog) {
+            ApiKeyEntryDialog(viewModel = chatViewModel)
+        } else {
+            // Existing chat UI
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                reverseLayout = true
+            ) {
+                items(chatHistory.reversed()) { message ->
+                    val isUser = message.sender == Sender.USER
+                    Column(
                         modifier = Modifier
-                            .padding(top = 2.dp)
-                            .widthIn(max = 300.dp)
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
                     ) {
                         Text(
-                            text = message.text,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(12.dp)
+                            text = if (isUser) "You" else "Automator",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                         )
+                        Surface(
+                            tonalElevation = 2.dp,
+                            shape = MaterialTheme.shapes.medium,
+                            color = if (isUser) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier
+                                .padding(top = 2.dp)
+                                .widthIn(max = 300.dp)
+                        ) {
+                            Text(
+                                text = message.text,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        if (uiState is UiState.Loading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(bottom = 8.dp)
-            )
-        }
+            if (uiState is UiState.Loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 8.dp)
+                )
+            }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            TextField(
-                value = prompt,
-                onValueChange = { prompt = it },
-                label = { Text("Message Automator...") },
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
-            )
-            Button(
-                onClick = {
-                    chatViewModel.sendMessage(prompt)
-                    prompt = ""
-                },
-                enabled = prompt.isNotBlank(),
-                modifier = Modifier.align(Alignment.CenterVertically)
+                    .fillMaxWidth()
+                    .padding(8.dp)
             ) {
-                Text("Send")
+                TextField(
+                    value = prompt,
+                    onValueChange = { prompt = it },
+                    label = { Text("Message Automator...") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
+                    enabled = uiState !is UiState.ShowApiKeyDialog // Disable input if dialog is shown
+                )
+                Button(
+                    onClick = {
+                        chatViewModel.sendMessage(prompt)
+                        prompt = ""
+                    },
+                    enabled = prompt.isNotBlank() && uiState !is UiState.ShowApiKeyDialog, // Disable button
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    Text("Send")
+                }
             }
         }
     }
 
-    // Show dialog when showYamlDialog is true
-    if (showYamlDialog && yamlToCopy.isNotBlank()) {
+    // Show YAML dialog when showYamlDialog is true AND ApiKeyDialog is not showing
+    if (showYamlDialog && yamlToCopy.isNotBlank() && uiState !is UiState.ShowApiKeyDialog) {
         AlertDialog(
             onDismissRequest = {
                 showYamlDialog = false
-                yamlToCopy = ""
+                // yamlToCopy = "" // Not strictly needed here
                 chatViewModel.onDialogResult(false) // Notify ViewModel of dismissal
             },
             title = { Text("YAML Content") },
             text = {
-                // Use a SelectableText to allow copying
                 Text(text = yamlToCopy, modifier = Modifier.padding(8.dp))
             },
             confirmButton = {
@@ -147,8 +153,7 @@ fun ChatScreen(
                         actorViewModel.executeAction(context, yamlToCopy)
                         chatViewModel.onDialogResult(true) // Notify ViewModel of copy
                         showYamlDialog = false // Dismiss dialog
-                        yamlToCopy = ""
-
+                        // yamlToCopy = ""
                     }) {
                     Text("Execute YAML")
                 }
@@ -156,13 +161,12 @@ fun ChatScreen(
             dismissButton = {
                 Button(onClick = {
                     showYamlDialog = false
-                    yamlToCopy = ""
+                    // yamlToCopy = ""
                     chatViewModel.onDialogResult(false) // Notify ViewModel of ignore
                 }) {
                     Text("Ignore")
                 }
-            },
-            // Prevent dialog from being dismissed by tapping outside.
+            }
         )
     }
 }

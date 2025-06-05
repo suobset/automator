@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.generativeai)
+    implementation("androidx.security:security-crypto:1.0.0")
     // For YAML Parsing
     // In your module-level build.gradle.kts (SelfSelect/app/build.gradle.kts)
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")

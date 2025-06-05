@@ -29,4 +29,6 @@ sealed interface UiState {
      * Show the YAML dialog
      */
     data class ShowYamlDialog(val yaml: String) : UiState  // Add this to the sealed interface
+
+    data object ShowApiKeyDialog : UiState
 }
