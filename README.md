@@ -9,7 +9,7 @@ Automator is an innovative Android application that empowers you to automate tas
 
 Currently, the app uses a Gemini backend with some minor prompt engineering and RAG. You will need a Gemini API key to use the app, [learn how to get one here](https://ai.google.dev/gemini-api/docs/api-key).
 
-During the first run, the App will prompt you are the API key as a pop-up message.
+During the first run, the App will prompt you the API key as a pop-up message (one-time only).
 
 The long term goal for the app is to democratize computation for people coming from regional areas with little no no knowledge in English, or using a device.
 This was specifically inspired by my own experiences helping people with limited reading/writing abilities to use their devices.
