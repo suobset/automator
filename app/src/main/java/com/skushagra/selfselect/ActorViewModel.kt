@@ -3,17 +3,34 @@ package com.skushagra.selfselect
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.util.Log // For better logging
+import android.widget.Toast
+import androidx.compose.runtime.mutableStateOf
 
 class ActorViewModel {
 
     private val yamlMapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
     private val TAG = "ActorViewModel" // For Logcat
 
+    fun copyAction(context: Context, yamlInput: String){
+        try {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("YAML Script", yamlInput)
+            clipboard.setPrimaryClip(clip)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error copying YAML to clipboard: ${e.message}", e)
+            Toast.makeText(context, "Error copying to clipboard", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     fun executeAction(context: Context, yamlInput: String) {
+        // Regardless of the action taken, copy YAML for edits
+        copyAction(context, yamlInput)
         try {
             val service = ActorAccessibilityService.instance
             if (service == null) {

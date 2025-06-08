@@ -47,7 +47,7 @@ fun ChatScreen(
             else -> {
                 showYamlDialog = false // Dismiss YAML dialog for other states
                 // yamlToCopy = "" // Not strictly necessary to clear here as it's only used when showYamlDialog is true
-            }
+           }
         }
     }
 
@@ -151,7 +151,7 @@ fun ChatScreen(
                 Button(
                     onClick = {
                         actorViewModel.executeAction(context, yamlToCopy)
-                        chatViewModel.onDialogResult(true) // Notify ViewModel of copy
+                        chatViewModel.onDialogResult(false) // Notify ViewModel of copy
                         showYamlDialog = false // Dismiss dialog
                         // yamlToCopy = ""
                     }) {
@@ -160,9 +160,10 @@ fun ChatScreen(
             },
             dismissButton = {
                 Button(onClick = {
-                    showYamlDialog = false
                     // yamlToCopy = ""
-                    chatViewModel.onDialogResult(false) // Notify ViewModel of ignore
+                    actorViewModel.copyAction(context, yamlToCopy)
+                    chatViewModel.onDialogResult(true) // Notify ViewModel of ignore
+                    showYamlDialog = false
                 }) {
                     Text("Ignore")
                 }

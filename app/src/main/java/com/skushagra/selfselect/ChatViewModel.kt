@@ -214,10 +214,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun onDialogResult(copy: Boolean) {
         viewModelScope.launch {
             if (copy) {
-                _chatHistory.value += ChatMessage("YAML copied to clipboard.", Sender.AUTOMATOR)
-                _uiState.value = UiState.Success("YAML copied.")
+                _chatHistory.value += ChatMessage("YAML copied to clipboard for edits.", Sender.AUTOMATOR)
+                _uiState.value = UiState.Success("YAML dialog dismissed & copied.")
             } else {
-                _uiState.value = UiState.Success(" YAML dialog dismissed.")
+                _chatHistory.value += ChatMessage("YAML executing (and copied)", Sender.AUTOMATOR)
+                _uiState.value = UiState.Success(" YAML executed.")
             }
         }
     }
