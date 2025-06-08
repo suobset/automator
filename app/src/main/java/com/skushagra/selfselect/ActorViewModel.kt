@@ -18,11 +18,16 @@ class ActorViewModel {
     private val yamlMapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
     private val TAG = "ActorViewModel" // For Logcat
 
+    // MutableState to hold the YAML Scripts
+    private val _yamlScripts = mutableStateOf("")
+    val yamlScripts: State<String> get() = _yamlScripts
+
     // MutableState to hold the error message for the UI
     private val _errorState = mutableStateOf("")
     val errorState: State<String> get() = _errorState
 
     fun copyAction(context: Context, yamlInput: String){
+        _yamlScripts.value = yamlInput
         try {
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = ClipData.newPlainText("YAML Script", yamlInput)
@@ -46,6 +51,8 @@ class ActorViewModel {
     fun executeAction(context: Context, yamlInput: String) {
         // Regardless of the action taken, clear the error box
         clearErrors()
+        // Store the yamlInput
+        _yamlScripts.value = yamlInput
         try {
             val service = ActorAccessibilityService.instance
             if (service == null) {
