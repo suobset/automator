@@ -10,6 +10,7 @@ import android.content.Intent
 import android.provider.Settings
 import android.util.Log // For better logging
 import android.widget.Toast
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 
 class ActorViewModel {
@@ -18,7 +19,8 @@ class ActorViewModel {
     private val TAG = "ActorViewModel" // For Logcat
 
     // MutableState to hold the error message for the UI
-    private val errorTextState = mutableStateOf("")
+    private val _errorState = mutableStateOf("")
+    val errorState: State<String> get() = _errorState
 
     fun copyAction(context: Context, yamlInput: String){
         try {
@@ -33,12 +35,17 @@ class ActorViewModel {
 
     fun showErrors(context: Context, yamlError: String) {
         // This function updates the errorTextState which is observed by the ActorScreen
-        errorTextState.value = yamlError
+        _errorState.value = yamlError
+        Toast.makeText(context, yamlError, Toast.LENGTH_SHORT).show()
+    }
+
+    fun clearErrors() {
+        _errorState.value = "No Errors"
     }
 
     fun executeAction(context: Context, yamlInput: String) {
-        // Regardless of the action taken, copy YAML for edits
-        copyAction(context, yamlInput)
+        // Regardless of the action taken, clear the error box
+        clearErrors()
         try {
             val service = ActorAccessibilityService.instance
             if (service == null) {

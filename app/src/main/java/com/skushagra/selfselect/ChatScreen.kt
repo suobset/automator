@@ -155,7 +155,7 @@ fun ChatScreen(
                         showYamlDialog = false // Dismiss dialog
                         // yamlToCopy = ""
                     }) {
-                    Text("Execute YAML")
+                    Text("Execute")
                 }
             },
             dismissButton = {
@@ -165,7 +165,7 @@ fun ChatScreen(
                     chatViewModel.onDialogResult(true) // Notify ViewModel of ignore
                     showYamlDialog = false
                 }) {
-                    Text("Ignore")
+                    Text("Copy")
                 }
             }
         )
