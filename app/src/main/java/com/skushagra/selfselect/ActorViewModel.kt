@@ -17,6 +17,9 @@ class ActorViewModel {
     private val yamlMapper = ObjectMapper(YAMLFactory()).registerKotlinModule()
     private val TAG = "ActorViewModel" // For Logcat
 
+    // MutableState to hold the error message for the UI
+    private val errorTextState = mutableStateOf("")
+
     fun copyAction(context: Context, yamlInput: String){
         try {
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -26,6 +29,11 @@ class ActorViewModel {
             Log.e(TAG, "Error copying YAML to clipboard: ${e.message}", e)
             Toast.makeText(context, "Error copying to clipboard", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    fun showErrors(context: Context, yamlError: String) {
+        // This function updates the errorTextState which is observed by the ActorScreen
+        errorTextState.value = yamlError
     }
 
     fun executeAction(context: Context, yamlInput: String) {
@@ -45,6 +53,7 @@ class ActorViewModel {
             val script = try {
                 yamlMapper.readValue(yamlInput, ActorScript::class.java)
             } catch (e: Exception) {
+                showErrors(context, "Error parsing YAML: ${e.message}")
                 Log.e(TAG, "Error parsing YAML: ${e.message}", e)
                 // Consider providing user feedback here if possible, e.g., via a callback or LiveData
                 return
@@ -52,6 +61,7 @@ class ActorViewModel {
 
             if (script.actions.isEmpty()) {
                 Log.d(TAG, "No actions found in the script.")
+                showErrors(context, "No actions found in the YAML script.")
                 return
             }
 
@@ -75,6 +85,7 @@ class ActorViewModel {
                         } else if (!packageName.isNullOrBlank()) {
                             service.openAppByPackageName(packageName)
                         } else {
+                            showErrors(context, "OPEN_APP action requires '${ParameterKeys.APP_NAME}' or '${ParameterKeys.PACKAGE_NAME}' parameter.")
                             Log.e(TAG, "OPEN_APP action requires '${ParameterKeys.APP_NAME}' or '${ParameterKeys.PACKAGE_NAME}' parameter.")
                         }
                     }
@@ -83,6 +94,7 @@ class ActorViewModel {
                         if (!url.isNullOrBlank()) {
                             service.launchUrl(url)
                         } else {
+                            showErrors(context, "LAUNCH_URL action requires '${ParameterKeys.URL}' parameter.")
                             Log.e(TAG, "LAUNCH_URL action requires '${ParameterKeys.URL}' parameter.")
                         }
                     }
@@ -93,6 +105,7 @@ class ActorViewModel {
                         if (textToType != null) { // textToType can be empty string
                             service.typeText(textToType, targetResId, targetText)
                         } else {
+                            showErrors(context, "TYPE_TEXT action requires '${ParameterKeys.TEXT_TO_TYPE}' parameter.")
                             Log.e(TAG, "TYPE_TEXT action requires '${ParameterKeys.TEXT_TO_TYPE}' parameter.")
                         }
                     }
@@ -103,6 +116,7 @@ class ActorViewModel {
                         if (elementText != null || resourceId != null || contentDescription != null) {
                             service.clickElement(elementText, resourceId, contentDescription)
                         } else {
+                            showErrors(context, "CLICK_ELEMENT action requires at least one of '${ParameterKeys.ELEMENT_TEXT_TO_CLICK}', '${ParameterKeys.ELEMENT_RESOURCE_ID}', or '${ParameterKeys.ELEMENT_CONTENT_DESCRIPTION}'.")
                             Log.e(TAG, "CLICK_ELEMENT action requires at least one of '${ParameterKeys.ELEMENT_TEXT_TO_CLICK}', '${ParameterKeys.ELEMENT_RESOURCE_ID}', or '${ParameterKeys.ELEMENT_CONTENT_DESCRIPTION}'.")
                         }
                     }
@@ -113,6 +127,7 @@ class ActorViewModel {
                         if (!direction.isNullOrBlank()) {
                             service.scrollView(direction, targetResId, targetText)
                         } else {
+                            showErrors(context, "SCROLL_VIEW action requires '${ParameterKeys.SCROLL_DIRECTION}' parameter.")
                             Log.e(TAG, "SCROLL_VIEW action requires '${ParameterKeys.SCROLL_DIRECTION}' parameter.")
                         }
                     }
@@ -124,9 +139,11 @@ class ActorViewModel {
                                 Log.d(TAG, "Waiting for ${durationMs}ms")
                                 Thread.sleep(durationMs)
                             } else {
+                                showErrors(context, "WAIT action requires a valid positive '${ParameterKeys.WAIT_DURATION_MS}'. Found: $durationString")
                                 Log.e(TAG, "WAIT action requires a valid positive '${ParameterKeys.WAIT_DURATION_MS}'. Found: $durationString")
                             }
                         } catch (e: NumberFormatException) {
+                            showErrors(context, "Invalid format for '${ParameterKeys.WAIT_DURATION_MS}'. Value: '$durationString'. Error: ${e.message}")
                             Log.e(TAG, "Invalid format for '${ParameterKeys.WAIT_DURATION_MS}'. Value: '$durationString'. Error: ${e.message}", e)
                         } catch (e: InterruptedException) {
                             Log.w(TAG, "Wait action interrupted.", e)
@@ -140,6 +157,7 @@ class ActorViewModel {
                         if ((!recipientName.isNullOrBlank() || !recipientNumber.isNullOrBlank()) && messageBody != null) {
                             service.sendTextMessage(recipientName, recipientNumber, messageBody)
                         } else {
+                            showErrors(context, "SEND_TEXT_MESSAGE requires ('${ParameterKeys.RECIPIENT_NAME}' or '${ParameterKeys.RECIPIENT_NUMBER}') and '${ParameterKeys.MESSAGE_BODY}'.")
                             Log.e(TAG, "SEND_TEXT_MESSAGE requires ('${ParameterKeys.RECIPIENT_NAME}' or '${ParameterKeys.RECIPIENT_NUMBER}') and '${ParameterKeys.MESSAGE_BODY}'.")
                         }
                     }
@@ -153,6 +171,7 @@ class ActorViewModel {
                             // service.toggleWifi(state.equals("ON", ignoreCase = true))
                             Log.i(TAG, "TOGGLE_WIFI action called with state $state (not yet fully implemented in service).")
                         } else {
+                            showErrors(context, "TOGGLE_WIFI action requires '${ParameterKeys.WIFI_STATE}' parameter (ON/OFF).")
                             Log.e(TAG, "TOGGLE_WIFI action requires '${ParameterKeys.WIFI_STATE}' parameter (ON/OFF).")
                         }
                     }
@@ -162,6 +181,7 @@ class ActorViewModel {
                             // service.toggleBluetooth(state.equals("ON", ignoreCase = true))
                             Log.i(TAG, "TOGGLE_BLUETOOTH action called with state $state (not yet fully implemented in service).")
                         } else {
+                            showErrors(context, "TOGGLE_BLUETOOTH action requires '${ParameterKeys.BLUETOOTH_STATE}' parameter (ON/OFF).")
                             Log.e(TAG, "TOGGLE_BLUETOOTH action requires '${ParameterKeys.BLUETOOTH_STATE}' parameter (ON/OFF).")
                         }
                     }
@@ -171,17 +191,20 @@ class ActorViewModel {
                             // service.setVolume(volumeLevel)
                             Log.i(TAG, "SET_VOLUME action called with level $volumeLevel (not yet fully implemented in service).")
                         } else {
+                            showErrors(context, "SET_VOLUME action requires '${ParameterKeys.VOLUME_LEVEL}' parameter.")
                             Log.e(TAG, "SET_VOLUME action requires '${ParameterKeys.VOLUME_LEVEL}' parameter.")
                         }
                     }
                     // ... (add other cases as per ActionTypes, initially logging them)
                     else -> {
+                        showErrors(context, "Unknown or not yet implemented action_type: ${actorAction.actionType}")
                         Log.w(TAG, "Unknown or not yet implemented action_type: ${actorAction.actionType}")
                     }
                 }
             }
         } catch (e: Exception) {
             // Catch any other unexpected errors during action execution loop or setup
+            showErrors(context, "Error executing action script: ${e.message}")
             Log.e(TAG, "Error executing action script: ${e.message}", e)
             // It might be useful to inform the user if an entire script fails catastrophically
         }

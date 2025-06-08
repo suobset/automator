@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 fun ActorScreen() {
     var yamlInput by rememberSaveable { mutableStateOf("") } // State to hold the YAML input
     val context = LocalContext.current
+    val errorTextState = remember { mutableStateOf("") } // State to hold the error message
     val actorViewModel = remember { ActorViewModel() }
     Column(
         modifier = Modifier
@@ -35,6 +36,19 @@ fun ActorScreen() {
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.None // No specific action for the keyboard (like "Done" or "Next")
             )
+        )
+
+        // Uneditable Text Box for YAML Errors
+        OutlinedTextField(
+            value = errorTextState.value, // Display the errors
+            onValueChange = { /* Do nothing, this is uneditable */ },
+            label = { Text("Errors") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f) // Make the TextField take up available space
+                .padding(bottom = 16.dp), // Add padding below the TextField
+            readOnly = true, // Make the TextField uneditable
+            isError = errorTextState.value.isNotBlank() // Highlight if there are errors
         )
 
         // Button below the Text Box
