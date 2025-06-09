@@ -12,10 +12,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.tooling.preview.Preview
-import com.skushagra.selfselect.ActorViewModel
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.AlertDialog // Import AlertDialog
 import com.skushagra.selfselect.ui.ApiKeyEntryDialog // Import the ApiKeyEntryDialog
@@ -119,14 +115,13 @@ fun ChatScreen(
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp),
-                    enabled = uiState !is UiState.ShowApiKeyDialog // Disable input if dialog is shown
                 )
                 Button(
                     onClick = {
                         chatViewModel.sendMessage(prompt)
                         prompt = ""
                     },
-                    enabled = prompt.isNotBlank() && uiState !is UiState.ShowApiKeyDialog, // Disable button
+                    enabled = prompt.isNotBlank(), // Disable button
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Text("Send")
