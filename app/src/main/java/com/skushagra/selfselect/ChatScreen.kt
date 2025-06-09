@@ -170,5 +170,8 @@ fun ChatScreen(
 @Preview(showSystemUi = true)
 @Composable
 fun ChatScreenPreview() {
-   ChatScreen()
+    val context = LocalContext.current
+    val application = context.applicationContext as android.app.Application
+    val previewViewModel = ChatViewModel(application = application, isPreview = true)
+    ChatScreen(chatViewModel = previewViewModel)
 }

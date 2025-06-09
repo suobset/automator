@@ -27,13 +27,16 @@ data class ChatMessage(
     val sender: Sender
 )
 
-class ChatViewModel(application: Application) : AndroidViewModel(application) {
+class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewModel(application) {
 
     private var generativeModel: GenerativeModel? = null
     private var conversation: Chat? = null
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Initial)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    // Secondary constructor for existing code, defaults to not being a preview
+    constructor(application: Application) : this(application, false)
 
     companion object {
         private const val PREFS_NAME = "selfselect_prefs" // Used by EncryptedSharedPreferences
@@ -42,7 +45,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
-        checkForApiKey(application.applicationContext)
+        if (isPreview) {
+            _uiState.value = UiState.Success("Preview mode: Chat functionality is disabled.")
+        } else {
+            checkForApiKey(application.applicationContext)
+        }
     }
 
     private fun storeApiKey(context: Context, apiKey: String) {
