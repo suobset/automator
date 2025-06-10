@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ActorScreen() {
-    var yamlInput by rememberSaveable { mutableStateOf("") } // State to hold the YAML input
+    var yamlInput by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
     val actorViewModel = remember { ActorViewModel() }
 
