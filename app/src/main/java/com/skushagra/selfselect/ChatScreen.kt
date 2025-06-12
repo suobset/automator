@@ -163,9 +163,9 @@ fun ChatScreen(
 @Preview(showSystemUi = true)
 @Composable
 fun ChatScreenPreview() {
-    val context = LocalContext.current
-    val application = context.applicationContext as android.app.Application
-    // This now works because the ViewModel handles the `isPreview` flag correctly
-    val previewViewModel = ChatViewModel(application = application, isPreview = true)
-    ChatScreen(chatViewModel = previewViewModel)
+//    val context = LocalContext.current
+//    val application = context.applicationContext as android.app.Application
+//    // This now works because the ViewModel handles the `isPreview` flag correctly
+//    val previewViewModel = ChatViewModel(application = application, isPreview = true)
+    //ChatScreen(chatViewModel = previewViewModel=)
 }

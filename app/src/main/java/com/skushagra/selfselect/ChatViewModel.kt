@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+// 1. ADD THIS IMPORT for your implicit prompt
+import com.skushagra.selfselect.prompt1
 
 enum class Sender {
     USER, AUTOMATOR
@@ -58,7 +60,6 @@ class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewM
         }
     }
 
-    // **MISSING FUNCTION ADDED HERE**
     fun updateUiStateToError(message: String) {
         _uiState.value = UiState.Error(message)
         viewModelScope.launch {
@@ -144,7 +145,9 @@ class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewM
         _uiState.value = UiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = conversation?.sendMessage("Hello")
+                // 2. CHANGE THIS LINE to send your prompt
+                val response = conversation?.sendMessage(prompt1)
+
                 val reply = response?.text ?: "Automator is ready but no specific greeting generated."
                 _chatHistory.value += ChatMessage(reply, Sender.AUTOMATOR)
                 _uiState.value = UiState.Success(reply)
