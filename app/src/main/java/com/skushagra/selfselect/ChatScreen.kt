@@ -1,5 +1,6 @@
 package com.skushagra.selfselect
 
+import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -160,12 +161,22 @@ fun ChatScreen(
     }
 }
 
+/**
+ * A dummy Application class required for previewing an AndroidViewModel.
+ * The preview environment doesn't provide a real Application instance,
+ * so we create a fake one that does nothing.
+ */
+private class PreviewApplication : Application()
+
 @Preview(showSystemUi = true)
 @Composable
 fun ChatScreenPreview() {
-//    val context = LocalContext.current
-//    val application = context.applicationContext as android.app.Application
-//    // This now works because the ViewModel handles the `isPreview` flag correctly
-//    val previewViewModel = ChatViewModel(application = application, isPreview = true)
-    //ChatScreen(chatViewModel = previewViewModel=)
+    // Create an instance of our dummy Application.
+    val dummyApplication = PreviewApplication()
+
+    // Create the ViewModel using the dummy Application, with isPreview = true.
+    val previewViewModel = ChatViewModel(application = dummyApplication, isPreview = true)
+
+    // Pass the safe, preview-ready ViewModel to your ChatScreen.
+    ChatScreen(chatViewModel = previewViewModel)
 }
