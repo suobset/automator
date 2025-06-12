@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.material3.AlertDialog // Import AlertDialog
-import com.skushagra.selfselect.ui.ApiKeyEntryDialog // Import the ApiKeyEntryDialog
+import androidx.compose.material3.AlertDialog
+import com.skushagra.selfselect.ui.ApiKeyEntryDialog
 
 @Composable
 fun ChatScreen(
@@ -23,27 +23,23 @@ fun ChatScreen(
     var prompt by rememberSaveable { mutableStateOf("") }
     val chatHistory by chatViewModel.chatHistory.collectAsState()
     val uiState by chatViewModel.uiState.collectAsState()
-    val context = LocalContext.current // Get context for clipboard manager
+    val context = LocalContext.current
     val actorViewModel = remember { ActorViewModel() }
-    // State to control the dialog visibility and content
+    // State to control the dialog visibility and content is managed locally again
     var showYamlDialog by rememberSaveable { mutableStateOf(false) }
     var yamlToCopy by rememberSaveable { mutableStateOf("") }
 
     // Observe uiState for changes, and update dialog state
     LaunchedEffect(uiState) {
-        when (val currentState = uiState) { // Assign uiState to currentState for smart casting
+        when (val currentState = uiState) {
             is UiState.ShowYamlDialog -> {
                 showYamlDialog = true
                 yamlToCopy = currentState.yaml
             }
-            is UiState.ShowApiKeyDialog -> {
-                // This state is now handled by the main Column's when(uiState) block
-                // No specific action needed here, but kept for clarity if future needs arise
-            }
+            // Reset dialog state for any other UI state
             else -> {
-                showYamlDialog = false // Dismiss YAML dialog for other states
-                // yamlToCopy = "" // Not strictly necessary to clear here as it's only used when showYamlDialog is true
-           }
+                showYamlDialog = false
+            }
         }
     }
 
@@ -121,7 +117,7 @@ fun ChatScreen(
                         chatViewModel.sendMessage(prompt)
                         prompt = ""
                     },
-                    enabled = prompt.isNotBlank(), // Disable button
+                    enabled = prompt.isNotBlank(),
                     modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Text("Send")
@@ -130,13 +126,12 @@ fun ChatScreen(
         }
     }
 
-    // Show YAML dialog when showYamlDialog is true AND ApiKeyDialog is not showing
-    if (showYamlDialog && yamlToCopy.isNotBlank() && uiState !is UiState.ShowApiKeyDialog) {
+    // Show YAML dialog when showYamlDialog is true
+    if (showYamlDialog && yamlToCopy.isNotBlank()) {
         AlertDialog(
             onDismissRequest = {
                 showYamlDialog = false
-                // yamlToCopy = "" // Not strictly needed here
-                chatViewModel.onDialogResult(false) // Notify ViewModel of dismissal
+                chatViewModel.onDialogResult(false)
             },
             title = { Text("YAML Content") },
             text = {
@@ -146,18 +141,16 @@ fun ChatScreen(
                 Button(
                     onClick = {
                         actorViewModel.executeAction(context, yamlToCopy)
-                        chatViewModel.onDialogResult(false) // Notify ViewModel of copy
-                        showYamlDialog = false // Dismiss dialog
-                        // yamlToCopy = ""
+                        chatViewModel.onDialogResult(false)
+                        showYamlDialog = false
                     }) {
                     Text("Execute")
                 }
             },
             dismissButton = {
                 Button(onClick = {
-                    // yamlToCopy = ""
                     actorViewModel.copyAction(context, yamlToCopy)
-                    chatViewModel.onDialogResult(true) // Notify ViewModel of ignore
+                    chatViewModel.onDialogResult(true)
                     showYamlDialog = false
                 }) {
                     Text("Copy")
@@ -172,6 +165,7 @@ fun ChatScreen(
 fun ChatScreenPreview() {
     val context = LocalContext.current
     val application = context.applicationContext as android.app.Application
+    // This now works because the ViewModel handles the `isPreview` flag correctly
     val previewViewModel = ChatViewModel(application = application, isPreview = true)
     ChatScreen(chatViewModel = previewViewModel)
 }

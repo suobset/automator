@@ -5,11 +5,10 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.security.crypto.EncryptedSharedPreferences // VERIFIED IMPORT
-import androidx.security.crypto.MasterKeys // VERIFIED IMPORT
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 import com.google.ai.client.generativeai.Chat
 import com.google.ai.client.generativeai.GenerativeModel
-// Removed: import com.google.ai.client.generativeai.type.InvalidApiKeyException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,27 +34,42 @@ class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewM
     private val _uiState = MutableStateFlow<UiState>(UiState.Initial)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
+    private val _chatHistory = MutableStateFlow<List<ChatMessage>>(emptyList())
+    val chatHistory: StateFlow<List<ChatMessage>> = _chatHistory.asStateFlow()
+
     // Secondary constructor for existing code, defaults to not being a preview
     constructor(application: Application) : this(application, false)
 
     companion object {
-        private const val PREFS_NAME = "selfselect_prefs" // Used by EncryptedSharedPreferences
-        private const val API_KEY_NAME = "api_key" // Used by EncryptedSharedPreferences
+        private const val PREFS_NAME = "selfselect_prefs"
+        private const val API_KEY_NAME = "api_key"
         private const val TAG = "ChatViewModel"
     }
 
     init {
         if (isPreview) {
-            _uiState.value = UiState.Success("Preview mode: Chat functionality is disabled.")
+            _uiState.value = UiState.Success("Preview mode")
+            _chatHistory.value = listOf(
+                ChatMessage("This is a response from the Automator.", Sender.AUTOMATOR),
+                ChatMessage("Hi, I'm a user.", Sender.USER)
+            )
         } else {
             checkForApiKey(application.applicationContext)
         }
     }
 
+    // **MISSING FUNCTION ADDED HERE**
+    fun updateUiStateToError(message: String) {
+        _uiState.value = UiState.Error(message)
+        viewModelScope.launch {
+            _chatHistory.value += ChatMessage(message, Sender.AUTOMATOR)
+        }
+    }
+
     private fun storeApiKey(context: Context, apiKey: String) {
-        try { // Defensive try-catch for security operations
-            val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC) // VERIFIED USAGE
-            val sharedPreferences = EncryptedSharedPreferences.create( // VERIFIED USAGE
+        try {
+            val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            val sharedPreferences = EncryptedSharedPreferences.create(
                 PREFS_NAME,
                 masterKeyAlias,
                 context,
@@ -68,14 +82,13 @@ class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewM
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error storing API key: ${e.message}", e)
-            // Optionally, inform the user or handle this failure
         }
     }
 
     private fun retrieveApiKey(context: Context): String? {
-        try { // Defensive try-catch for security operations
-            val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC) // VERIFIED USAGE
-            val sharedPreferences = EncryptedSharedPreferences.create( // VERIFIED USAGE
+        try {
+            val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            val sharedPreferences = EncryptedSharedPreferences.create(
                 PREFS_NAME,
                 masterKeyAlias,
                 context,
@@ -85,7 +98,7 @@ class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewM
             return sharedPreferences.getString(API_KEY_NAME, null)
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving API key: ${e.message}", e)
-            return null // Return null if retrieval fails
+            return null
         }
     }
 
@@ -118,11 +131,9 @@ class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewM
             sendInitialMessage()
             return
         }
-        // Removed BuildConfig.apiKey pathway here based on previous step
         Log.i(TAG, "Stored API key not valid or not found. Prompting for new API key via dialog.")
         _uiState.value = UiState.ShowApiKeyDialog
     }
-
 
     fun sendInitialMessage() {
         if (conversation == null) {
@@ -133,7 +144,7 @@ class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewM
         _uiState.value = UiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = conversation?.sendMessage(prompt1)
+                val response = conversation?.sendMessage("Hello")
                 val reply = response?.text ?: "Automator is ready but no specific greeting generated."
                 _chatHistory.value += ChatMessage(reply, Sender.AUTOMATOR)
                 _uiState.value = UiState.Success(reply)
@@ -145,9 +156,6 @@ class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewM
             }
         }
     }
-
-    private val _chatHistory = MutableStateFlow<List<ChatMessage>>(emptyList())
-    val chatHistory: StateFlow<List<ChatMessage>> = _chatHistory.asStateFlow()
 
     fun sendMessage(prompt: String) {
         if (conversation == null) {
@@ -197,10 +205,6 @@ class ChatViewModel(application: Application, isPreview: Boolean) : AndroidViewM
                 _uiState.value = UiState.ShowApiKeyDialog
             }
         }
-    }
-
-    fun updateUiStateToError(message: String) {
-        _uiState.value = UiState.Error(message)
     }
 
     private fun extractYamlAndPrompt(text: String) {
