@@ -51,7 +51,15 @@ The first non-Latin regional languages I am targeting are Hindi and Arabic.
 
 <img src="https://github.com/user-attachments/assets/b6962bf7-ffe3-4ab2-b7e3-c9c4f5b1ef83" width="30%">
 
-(More incoming, including editing YAML, customizations, chained actions, etc.)
+
+
+### Chained actions, editing, error messages
+
+[Screencastfrom2025-06-1923-13-55-ezgif.com-video-to-gif-converter.webm](https://github.com/user-attachments/assets/98634483-aaf4-4c55-b4eb-90ddefe8f96a)
+
+### API Entry Screen (First boot)
+
+![Screenshot from 2025-06-19 22-40-17](https://github.com/user-attachments/assets/23dc5bbd-70cd-44db-a99d-e385682d0be0)
 
 ## Requirements / Prerequisites
 *   **Android Studio:** Latest stable version recommended (e.g., Hedgehog or newer).
