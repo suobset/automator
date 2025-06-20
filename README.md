@@ -19,7 +19,7 @@ The post also contains details on what this app does, and how we achieve it.
 
 ### Things to note
 
-Most importantly, SelfSelect/Automator is currently a very early-stage product. While I have been able to harness most of Android's accessibility features (including chaining of different YAML commands, and LLM prompt-engineering + RAG for YAML references), not all actions are going to be possible. Specifically, the current challenge (as of June 05) is the invocation of any action within a different app.
+Most importantly, SelfSelect/Automator is currently a very early-stage product. While I have been able to harness most of Android's accessibility features (including chaining of different YAML commands, and LLM prompt-engineering for YAML references), not all actions are going to be possible. 
 
 For example, "Open Wikipedia and navigate to the search bar" works perfectly fine. This is an end goal that can be invoked from the app itself.
 
