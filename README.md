@@ -5,33 +5,6 @@
 ## Short Description
 Automator is an innovative Android application that empowers you to automate tasks on your device using natural language commands. It leverages the power of Google's Gemini Large Language Model (LLM) to understand your intentions and translate them into executable YAML scripts. The app's "Actor" component then uses Android's Accessibility Service to perform these actions, offering a hands-free way to control your phone.
 
-> So, what's the long term goal here?
-
-Currently, the app uses a Gemini backend with some minor prompt engineering and RAG. You will need a Gemini API key to use the app, [learn how to get one here](https://ai.google.dev/gemini-api/docs/api-key).
-
-During the first run, the App will prompt you the API key as a pop-up message (one-time only).
-
-The long term goal for the app is to democratize computation for people coming from regional areas with little no no knowledge in English, or using a device.
-This was specifically inspired by my own experiences helping people with limited reading/writing abilities to use their devices.
-
-If you're curious, I have already written a [blog post](https://www.skushagra.com/2025/05/zero-android-experience-to-working.html) a while ago demonstrating how I learnt Android dev from scratch, and how AI supplemented the process to an extent here.
-The post also contains details on what this app does, and how we achieve it.
-
-### Things to note
-
-Most importantly, SelfSelect/Automator is currently a very early-stage product. While I have been able to harness most of Android's accessibility features (including chaining of different YAML commands, and LLM prompt-engineering for YAML references), not all actions are going to be possible. 
-
-For example, "Open Wikipedia and navigate to the search bar" works perfectly fine. This is an end goal that can be invoked from the app itself.
-
-However, "Take a picture from my front camera" is currently not possible, as it requires the camera to already be in the foreground.
-
-Right now, the "Actor" performs actions. The next stage is for it to perceive the result. After tapping "Login," how does it know it's on the dashboard screen? This involves screen-reading, OCR, and understanding the "state" of the app. This is the next logical step for me to build into this project.
-
-Parallel to this project, I am also working on a fine-tuned LLM that communicates in regional languages that do not follow a latin script.
-I hope to share more details regarding this in the future [on my blog](https://skushagra.com). Model weights will be open.
-
-The first non-Latin regional languages I am targeting are Hindi and Arabic.
-
 ## Features
 *   **Natural Language Control:** Interact with your device by typing commands in a chat interface.
 *   **LLM-Powered:** Utilizes the Gemini API to understand complex requests and generate automation scripts.
@@ -50,8 +23,6 @@ The first non-Latin regional languages I am targeting are Hindi and Arabic.
 ## Screenshots/Workflows
 
 <img src="https://github.com/user-attachments/assets/b6962bf7-ffe3-4ab2-b7e3-c9c4f5b1ef83" width="30%">
-
-
 
 ### Chained actions, editing, error messages
 
